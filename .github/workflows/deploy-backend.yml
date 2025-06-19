@@ -1,0 +1,67 @@
+name: 🚀 Deploy Backend
+
+on:
+  push:
+    branches: [ main ]
+    paths: 
+      - 'backend/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'backend/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Install dependencies
+      run: |
+        cd backend
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Run tests
+      run: |
+        cd backend
+        # Добавьте здесь ваши тесты когда будут готовы
+        # python -m pytest tests/
+        echo "Tests will be added later"
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Deploy to Railway
+      uses: railway-deploy@v1
+      with:
+        railway_token: ${{ secrets.RAILWAY_TOKEN }}
+        service: backend
+        
+    # Или для деплоя на Render:
+    # - name: Deploy to Render
+    #   uses: johnbeynon/render-deploy-action@v0.0.8
+    #   with:
+    #     service-id: ${{ secrets.RENDER_SERVICE_ID }}
+    #     api-key: ${{ secrets.RENDER_API_KEY }}
+        
+    # Или для деплоя на Heroku:
+    # - name: Deploy to Heroku
+    #   uses: akhileshns/heroku-deploy@v3.12.12
+    #   with:
+    #     heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
+    #     heroku_app_name: "your-app-name"
+    #     heroku_email: "your-email@example.com"
+    #     usedocker: true
+    #     appdir: "backend" 

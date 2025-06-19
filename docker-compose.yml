@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  # Backend API
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL:-postgresql://user:password@db:5432/prediction_bot}
+      - SECRET_KEY=${SECRET_KEY:-dev-secret-key-change-in-production}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+    depends_on:
+      - db
+    restart: unless-stopped
+    volumes:
+      - ./backend:/app
+    networks:
+      - prediction-bot-network
+
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=prediction_bot
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+    networks:
+      - prediction-bot-network
+
+  # Telegram Bot
+  telegram-bot:
+    build:
+      context: ./telegram-bot
+      dockerfile: Dockerfile
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - API_BASE_URL=http://backend:8000
+      - WEBAPP_URL=${WEBAPP_URL:-http://localhost:3000}
+    depends_on:
+      - backend
+    restart: unless-stopped
+    volumes:
+      - ./telegram-bot:/app
+    networks:
+      - prediction-bot-network
+
+  # Frontend (опционально для разработки)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    restart: unless-stopped
+    networks:
+      - prediction-bot-network
+
+volumes:
+  postgres_data:
+
+networks:
+  prediction-bot-network:
+    driver: bridge 

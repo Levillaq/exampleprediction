@@ -1,0 +1,69 @@
+name: 🔥 Deploy Frontend to Firebase
+
+on:
+  push:
+    branches: [ main ]
+    paths: 
+      - 'frontend/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'frontend/**'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+    
+    - name: Install dependencies
+      run: |
+        cd frontend
+        npm ci
+    
+    - name: Create environment file
+      run: |
+        cd frontend
+        echo "REACT_APP_API_URL=${{ secrets.BACKEND_URL || 'https://your-backend.railway.app' }}" > .env.production
+    
+    - name: Build React app
+      run: |
+        cd frontend
+        npm run build
+    
+    - name: Deploy to Firebase Hosting
+      if: github.ref == 'refs/heads/main'
+      uses: FirebaseExtended/action-hosting-deploy@v0
+      with:
+        repoToken: '${{ secrets.GITHUB_TOKEN }}'
+        firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
+        projectId: '${{ secrets.FIREBASE_PROJECT_ID }}'
+        channelId: live
+        entryPoint: './frontend'
+    
+    # Альтернативный способ деплоя через Firebase CLI
+    - name: Deploy with Firebase CLI (fallback)
+      if: github.ref == 'refs/heads/main' && failure()
+      run: |
+        cd frontend
+        npm install -g firebase-tools
+        echo "${{ secrets.FIREBASE_TOKEN }}" | firebase login:ci
+        firebase deploy --project ${{ secrets.FIREBASE_PROJECT_ID }} --only hosting
+      env:
+        FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+    
+    - name: Comment deployment URL
+      if: github.ref == 'refs/heads/main' && success()
+      run: |
+        echo "🎉 Frontend успешно задеплоен!"
+        echo "🔗 URL: https://${{ secrets.FIREBASE_PROJECT_ID }}.web.app"
+        echo "📱 Не забудьте обновить WEBAPP_URL в настройках Telegram бота!" 

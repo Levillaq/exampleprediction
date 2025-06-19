@@ -2,13 +2,9 @@ name: 🚀 Deploy Backend
 
 on:
   push:
-    branches: [ main ]
-    paths: 
-      - 'backend/**'
+    branches: [ master, main ]
   pull_request:
-    branches: [ main ]
-    paths:
-      - 'backend/**'
+    branches: [ master, main ]
 
 jobs:
   test:
@@ -38,7 +34,7 @@ jobs:
   deploy:
     needs: test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     
     steps:
     - uses: actions/checkout@v4

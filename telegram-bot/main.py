@@ -16,8 +16,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Конфигурация
-BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
-WEBAPP_URL = os.getenv('WEBAPP_URL', 'https://your-webapp-url.com')
+BOT_TOKEN = os.getenv('8115467392:AAEBC0OjwqL9Lv80eUu6CsqeNzTWJXh-mbA')
+WEBAPP_URL = os.getenv('WEBAPP_URL', 'https://exampleprediction.web.app')
 API_BASE_URL = os.getenv('API_BASE_URL', 'http://localhost:8000')
 PAYMENT_PROVIDER_TOKEN = os.getenv('TELEGRAM_PAYMENT_PROVIDER_TOKEN')
 
